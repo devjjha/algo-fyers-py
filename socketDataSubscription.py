@@ -1,33 +1,54 @@
 import threading
+import time
 
 from fyers_api.Websocket import ws
 
-from main import app_id, access_token, run_background, socketOpenResponse, socketErrorResponse, \
-    socketSymbolDataResponse, symbols, socketOrderUpdateDataResponse
+from main import run_background, socketSymbolDataResponse, socketOrderUpdateDataResponse
+
+exit_event = threading.Event()
 
 
-def symbolData(subscribedSymbol):
-    symbolSocket = ws.FyersSocket(access_token=app_id + access_token, run_background=run_background,
+def symbolData(subscribedSymbol, ack_tkn):
+    symbolSocket = ws.FyersSocket(access_token=ack_tkn, run_background=run_background,
                                   log_path='../logs/')
-    symbolSocket.on_open = socketOpenResponse
-    symbolSocket.on_error = socketErrorResponse
+    #    symbolSocket.on_open = socketOpenResponse
+    #    symbolSocket.on_error = socketErrorResponse
     symbolSocket.websocket_data = socketSymbolDataResponse
     symbolSocket.subscribe(symbol=subscribedSymbol, data_type="symbolData")
 
 
-def orderUpdateData():
-    orderSocket = ws.FyersSocket(access_token=app_id + access_token, run_background=run_background,
+def orderUpdateData(ack_tkn):
+    orderSocket = ws.FyersSocket(access_token=ack_tkn, run_background=run_background,
                                  log_path='../logs/')
-    orderSocket.on_open = socketOpenResponse
-    orderSocket.on_error = socketErrorResponse
+    #    orderSocket.on_open = socketOpenResponse
+    #    orderSocket.on_error = socketErrorResponse
     orderSocket.websocket_data = socketOrderUpdateDataResponse
     orderSocket.subscribe(data_type="orderUpdate")
 
 
-def subscribeUpdates(subscribedSymbol):
-    threading.Thread(target=symbolData, args=(subscribedSymbol,)).start()
-    threading.Thread(target=orderUpdateData, args=()).start()
+def subscribeUpdates(argSymbols, token):
+    symbolT = threading.Thread(target=symbolData, args=(argSymbols, token,))
+    symbolT.start()
 
 
-while True:
-    subscribeUpdates(symbols)
+def orderUpdates(token):
+    orderT = threading.Thread(target=orderUpdateData, args=(token,))
+    orderT.start()
+
+
+def stopRunningFeeds():
+    exit_event.set()
+
+
+def unsubscribeSymbols(symbols, ack_tkn):
+    symbolSocket = ws.FyersSocket(access_token=ack_tkn, run_background=run_background,
+                                  log_path='../logs/')
+    symbolSocket.unsubscribe(symbols)
+
+
+def trigger_subscription():
+    while True:
+        time.sleep(1)
+        exit_event.set()
+        if exit_event.is_set():
+            break

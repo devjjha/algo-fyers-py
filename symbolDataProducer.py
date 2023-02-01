@@ -16,7 +16,7 @@ def sendSymbolData(symbolsFeedData):
 
 
 def sendOrderUpdateData(orderUpdateData):
-    p.produce('order_update_feed', value=json.dumps(orderUpdateData),
+    p.produce('order_update_feed', value=json.dumps(orderUpdateData).encode('utf-8'),
               callback=lambda err, msg: print("Message delivered to topic => ", msg.topic(), "with key => ",
                                               msg.key(), "@Partition",
                                               msg.partition()))
@@ -45,6 +45,6 @@ orderData = {"s": "ok",
                    "message": "CONFIRMED", "orderNumStatus": "2230112358425:6", "tradedPrice": 0.0,
                    "fyToken": "101123011240706", "symbol": "NSE:BANKNIFTY2311241700PE"}, "ws_type": 1}
 
-sendSymbolData(symbolData)
-
-sendOrderUpdateData(orderData)
+# for _ in range(10):
+#     sendSymbolData(symbolData)
+#     sendOrderUpdateData(orderData)
