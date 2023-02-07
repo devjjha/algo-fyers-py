@@ -3,13 +3,34 @@ import time
 
 from fyers_api.Websocket import ws
 
-from main import run_background, socketSymbolDataResponse, socketOrderUpdateDataResponse
+import symbolDataProducer
+
+backgroundProcess = False
 
 exit_event = threading.Event()
 
 
+def socketSymbolDataResponse(msg):
+    print("Inside socketSymbolDataResponse")
+    symbolDataProducer.sendSymbolData(msg)
+
+
+def socketOrderUpdateDataResponse(msg):
+    print("Inside socketOrderUpdateDataResponse")
+    symbolDataProducer.sendOrderUpdateData(msg)
+
+
+def socketOpenResponse(msg):
+    print(f'Opened Socket {msg}')
+
+
+def socketErrorResponse(msg):
+    print(f'Error in Socket {msg}')
+    return msg
+
+
 def symbolData(subscribedSymbol, ack_tkn):
-    symbolSocket = ws.FyersSocket(access_token=ack_tkn, run_background=run_background,
+    symbolSocket = ws.FyersSocket(access_token=ack_tkn, run_background=backgroundProcess,
                                   log_path='../logs/')
     #    symbolSocket.on_open = socketOpenResponse
     #    symbolSocket.on_error = socketErrorResponse
@@ -18,7 +39,7 @@ def symbolData(subscribedSymbol, ack_tkn):
 
 
 def orderUpdateData(ack_tkn):
-    orderSocket = ws.FyersSocket(access_token=ack_tkn, run_background=run_background,
+    orderSocket = ws.FyersSocket(access_token=ack_tkn, run_background=backgroundProcess,
                                  log_path='../logs/')
     #    orderSocket.on_open = socketOpenResponse
     #    orderSocket.on_error = socketErrorResponse
@@ -41,7 +62,7 @@ def stopRunningFeeds():
 
 
 def unsubscribeSymbols(symbols, ack_tkn):
-    symbolSocket = ws.FyersSocket(access_token=ack_tkn, run_background=run_background,
+    symbolSocket = ws.FyersSocket(access_token=ack_tkn, run_background=backgroundProcess,
                                   log_path='../logs/')
     symbolSocket.unsubscribe(symbols)
 
