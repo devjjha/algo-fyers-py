@@ -11,12 +11,10 @@ exit_event = threading.Event()
 
 
 def socketSymbolDataResponse(msg):
-    print("Inside socketSymbolDataResponse")
     symbolDataProducer.sendSymbolData(msg)
 
 
 def socketOrderUpdateDataResponse(msg):
-    print("Inside socketOrderUpdateDataResponse")
     symbolDataProducer.sendOrderUpdateData(msg)
 
 
@@ -41,8 +39,6 @@ def symbolData(subscribedSymbol, ack_tkn):
 def orderUpdateData(ack_tkn):
     orderSocket = ws.FyersSocket(access_token=ack_tkn, run_background=backgroundProcess,
                                  log_path='../logs/')
-    #    orderSocket.on_open = socketOpenResponse
-    #    orderSocket.on_error = socketErrorResponse
     orderSocket.websocket_data = socketOrderUpdateDataResponse
     orderSocket.subscribe(data_type="orderUpdate")
 
